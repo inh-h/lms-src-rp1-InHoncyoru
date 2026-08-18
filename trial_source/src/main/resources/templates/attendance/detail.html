@@ -79,6 +79,14 @@
 			setInterval(function() {
 				$("#now").text('現在の時刻は　' + getClock() + '　です。');
 			}, 1000);
+			
+			// ★追加：過去日の未入力確認ダイアログ表示
+						// Thymeleafをインライン展開し、trueの場合のみアラートを表示します
+						const hasPastUnentered = /*[[${hasPastUnentered}]]*/ false;
+						if (hasPastUnentered) {
+							alert("過去の勤怠情報に未入力があります。確認してください。");
+						}
+			
 		});
 		function getClock() {
 			const today =  new Date();

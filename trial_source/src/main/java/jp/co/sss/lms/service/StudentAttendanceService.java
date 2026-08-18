@@ -334,4 +334,33 @@ public class StudentAttendanceService {
 		return messageUtil.getMessage(Constants.PROP_KEY_ATTENDANCE_UPDATE_NOTICE);
 	}
 
+	/**
+	 * Ⅱ．現在より過去に未入力が無いかチェック
+	 * 
+	 * @param lmsUserId ログイン情報DTO．LMSユーザID
+	 * @return 未入力あり(true) / 未入力なし(false)
+	 */
+	public boolean checkPastUnenteredAttendance(Integer lmsUserId) {
+
+		// a．SimpleDateFormatクラスでフォーマットパターンを設定する
+		java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
+
+		// b．現在日付を取得
+		Date nowDate = new Date();
+		String formattedDate = sdf.format(nowDate);
+
+		// 1．下記APIを呼び出し、過去日の未入力数をカウント
+		// パラメータ：LMSユーザID、削除フラグ（Constants.DB_FLG_FALSE）、現在日付
+		int unenteredCount = tStudentAttendanceMapper.countUnenteredPastAttendance(
+				lmsUserId, Constants.DB_FLG_FALSE, formattedDate);
+
+		// 2．取得した未入力カウント数が0より大きい場合、trueを返す
+		if (unenteredCount > 0) {
+			return true;
+		}
+
+		// 3．それ以外はfalseを返す
+		return false;
+	}
+
 }

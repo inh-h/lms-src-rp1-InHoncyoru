@@ -65,4 +65,15 @@ public interface TStudentAttendanceMapper {
 	 */
 	Boolean update(TStudentAttendance tStudentAttendance);
 
+	/**
+	 * 過去日の勤怠未入力件数を取得する
+	 * 
+	 * @param lmsUserId   LMSユーザID
+	 * @param deleteFlg   削除フラグ
+	 * @param nowDateString 現在日付 (yyyy-MM-dd)
+	 * @return 未入力件数
+	 */
+	int countUnenteredPastAttendance(@Param("lmsUserId") Integer lmsUserId,
+			@Param("deleteFlg") Short deleteFlg, @Param("nowDateString") String nowDateString);
+
 }

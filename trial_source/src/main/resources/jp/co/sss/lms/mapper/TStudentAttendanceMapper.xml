@@ -87,12 +87,12 @@
 	</update>
     
     <!-- 過去日の勤怠未入力件数を取得する -->
-	<select id="countUnenteredPastAttendance" resultType="int">
-		SELECT COUNT(*)
+	<select id="notEnterCount" resultType="int">
+		SELECT COUNT (*)
 		FROM t_student_attendance
 		WHERE lms_user_id = #{lmsUserId}
 			AND delete_flg = #{deleteFlg}
-			<![CDATA[ AND cast(training_date AS DATE) < cast(#{nowDateString} AS DATE) ]]>
+			AND training_date &lt; #{nowDateString}::timestamp
 			AND (training_start_time IS NULL OR training_start_time = '')
 	</select>
 

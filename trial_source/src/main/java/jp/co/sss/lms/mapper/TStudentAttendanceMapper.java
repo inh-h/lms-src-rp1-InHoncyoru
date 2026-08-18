@@ -73,7 +73,7 @@ public interface TStudentAttendanceMapper {
 	 * @param nowDateString 現在日付 (yyyy-MM-dd)
 	 * @return 未入力件数
 	 */
-	int countUnenteredPastAttendance(@Param("lmsUserId") Integer lmsUserId,
-			@Param("deleteFlg") Short deleteFlg, @Param("nowDateString") String nowDateString);
+	int notEnterCount(@Param("lmsUserId") Integer lmsUserId, @Param("deleteFlg") Short deleteFlg,
+			@Param("nowDateString") String nowDateString);
 
 }

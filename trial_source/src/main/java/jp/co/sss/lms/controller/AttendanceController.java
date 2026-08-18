@@ -47,11 +47,13 @@ public class AttendanceController {
 				.getAttendanceManagement(loginUserDto.getCourseId(), loginUserDto.getLmsUserId());
 		model.addAttribute("attendanceManagementDtoList", attendanceManagementDtoList);
 
-		// 追加：Ⅱ．現在より過去に未入力が無いかチェック
-		// loginUserDtoからLMSユーザIDを渡してサービス側でチェックを行う
-		boolean hasPastUnentered = studentAttendanceService.checkPastUnenteredAttendance(loginUserDto.getLmsUserId());
-		model.addAttribute("hasPastUnentered", hasPastUnentered);
-
+		// 追加：現在より過去に未入力が無いかチェック
+		try {
+			boolean hasPastUnentered = studentAttendanceService.notEnterCheck();
+			model.addAttribute("hasPastUnentered", hasPastUnentered);
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
 		return "attendance/detail";
 	}
 

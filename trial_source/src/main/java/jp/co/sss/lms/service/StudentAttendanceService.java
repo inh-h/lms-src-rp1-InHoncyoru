@@ -1,6 +1,7 @@
 package jp.co.sss.lms.service;
 
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -340,26 +341,23 @@ public class StudentAttendanceService {
 	 * @param lmsUserId ログイン情報DTO．LMSユーザID
 	 * @return 未入力あり(true) / 未入力なし(false)
 	 */
-	public boolean checkPastUnenteredAttendance(Integer lmsUserId) {
-
+	public boolean notEnterCheck() throws ParseException {
 		// a．SimpleDateFormatクラスでフォーマットパターンを設定する
-		java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
 		// b．現在日付を取得
 		Date nowDate = new Date();
 		String formattedDate = sdf.format(nowDate);
 
-		// 1．下記APIを呼び出し、過去日の未入力数をカウント
+		// 下記APIを呼び出し、過去日の未入力数をカウント
 		// パラメータ：LMSユーザID、削除フラグ（Constants.DB_FLG_FALSE）、現在日付
-		int unenteredCount = tStudentAttendanceMapper.countUnenteredPastAttendance(
-				lmsUserId, Constants.DB_FLG_FALSE, formattedDate);
+		int unenteredCount = tStudentAttendanceMapper.notEnterCount(
+				loginUserDto.getLmsUserId(), Constants.DB_FLG_FALSE, formattedDate);
 
-		// 2．取得した未入力カウント数が0より大きい場合、trueを返す
+		// 未入力日が0より大きい場合はtrue,そうでない場合はfalseを戻す。
 		if (unenteredCount > 0) {
 			return true;
 		}
-
-		// 3．それ以外はfalseを返す
 		return false;
 	}
 

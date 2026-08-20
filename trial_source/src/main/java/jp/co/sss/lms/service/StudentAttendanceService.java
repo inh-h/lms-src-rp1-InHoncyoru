@@ -342,14 +342,14 @@ public class StudentAttendanceService {
 	 * @return 未入力あり(true) / 未入力なし(false)
 	 */
 	public boolean notEnterCheck() throws ParseException {
-		// a．SimpleDateFormatクラスでフォーマットパターンを設定する
+		// SimpleDateFormatクラスでフォーマットパターンを設定する
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
-		// b．現在日付を取得
+		// 現在日付を取得
 		Date nowDate = new Date();
 		String formattedDate = sdf.format(nowDate);
 
-		// 下記APIを呼び出し、過去日の未入力数をカウント
+		// 過去日の未入力数をカウント
 		// パラメータ：LMSユーザID、削除フラグ（Constants.DB_FLG_FALSE）、現在日付
 		int unenteredCount = tStudentAttendanceMapper.notEnterCount(
 				loginUserDto.getLmsUserId(), Constants.DB_FLG_FALSE, formattedDate);

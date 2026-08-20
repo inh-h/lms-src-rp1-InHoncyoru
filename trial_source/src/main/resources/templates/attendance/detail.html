@@ -80,12 +80,12 @@
 				$("#now").text('現在の時刻は　' + getClock() + '　です。');
 			}, 1000);
 			
-			// ★追加：過去日の未入力確認ダイアログ表示
-						// Thymeleafをインライン展開し、trueの場合のみアラートを表示します
-						const hasPastUnentered = /*[[${hasPastUnentered}]]*/ false;
-						if (hasPastUnentered) {
-							alert("過去日の勤怠に未入力があります。");
-						}
+			// 追加：過去日の未入力確認ダイアログ表示
+			// Thymeleafをインライン展開し、trueの場合のみアラートを表示
+				const hasPastUnentered = /*[[${hasPastUnentered}]]*/ false;
+				if (hasPastUnentered) {
+					alert("過去日の勤怠に未入力があります。");
+				}
 			
 		});
 		function getClock() {

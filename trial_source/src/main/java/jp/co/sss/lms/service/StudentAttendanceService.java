@@ -350,7 +350,7 @@ public class StudentAttendanceService {
 		String formattedDate = sdf.format(nowDate);
 
 		// 過去日の未入力数をカウント
-		// パラメータ：LMSユーザID、削除フラグ（Constants.DB_FLG_FALSE）、現在日付
+		// パラメータ：LMSユーザID、削除フラグ、現在日付
 		int unenteredCount = tStudentAttendanceMapper.notEnterCount(
 				loginUserDto.getLmsUserId(), Constants.DB_FLG_FALSE, formattedDate);
 

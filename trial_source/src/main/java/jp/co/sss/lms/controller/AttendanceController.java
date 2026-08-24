@@ -33,6 +33,7 @@ public class AttendanceController {
 	/**
 	 * 勤怠管理画面 初期表示
 	 * 
+	 * @author 任弘哲  – Task.25
 	 * @param lmsUserId
 	 * @param courseId
 	 * @param model
@@ -47,7 +48,6 @@ public class AttendanceController {
 				.getAttendanceManagement(loginUserDto.getCourseId(), loginUserDto.getLmsUserId());
 		model.addAttribute("attendanceManagementDtoList", attendanceManagementDtoList);
 
-		// 追加：現在より過去に未入力が無いかチェック
 		try {
 			boolean hasPastUnentered = studentAttendanceService.notEnterCheck();
 			model.addAttribute("hasPastUnentered", hasPastUnentered);
@@ -139,6 +139,8 @@ public class AttendanceController {
 	@RequestMapping(path = "/update", params = "complete", method = RequestMethod.POST)
 	public String complete(AttendanceForm attendanceForm, Model model, BindingResult result)
 			throws ParseException {
+		// 画面から入力された時・分を「hh:mm」形式に変換してセットする
+		studentAttendanceService.formatConversion(attendanceForm);
 
 		// 更新
 		String message = studentAttendanceService.update(attendanceForm);

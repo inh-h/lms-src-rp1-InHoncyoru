@@ -79,8 +79,7 @@
 			setInterval(function() {
 				$("#now").text('現在の時刻は　' + getClock() + '　です。');
 			}, 1000);
-			
-			// 追加：過去日の未入力確認ダイアログ表示
+			// 任弘哲 – Task.25
 			// Thymeleafをインライン展開し、trueの場合のみアラートを表示
 				const hasPastUnentered = /*[[${hasPastUnentered}]]*/ false;
 				if (hasPastUnentered) {

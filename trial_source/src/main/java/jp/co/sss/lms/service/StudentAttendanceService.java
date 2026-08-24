@@ -4,6 +4,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.springframework.beans.BeanUtils;
@@ -221,6 +222,26 @@ public class StudentAttendanceService {
 		attendanceForm.setLeaveFlg(loginUserDto.getLeaveFlg());
 		attendanceForm.setBlankTimes(attendanceUtil.setBlankTime());
 
+		// 時間マップ
+		LinkedHashMap<Integer, String> hours = new LinkedHashMap<>();
+		hours.put(null, "");
+
+		for (int i = 0; i < 12; i++) {
+			hours.put(i, String.format("%02d", i + 1));
+		}
+
+		attendanceForm.setHours(hours);
+
+		// 分マップ
+		LinkedHashMap<Integer, String> minutes = new LinkedHashMap<>();
+		minutes.put(null, "");
+
+		for (int i = 0; i < 60; i++) {
+			minutes.put(i, String.format("%02d", i));
+		}
+
+		attendanceForm.setMinutes(minutes);
+
 		// 途中退校している場合のみ設定
 		if (loginUserDto.getLeaveDate() != null) {
 			attendanceForm
@@ -239,6 +260,28 @@ public class StudentAttendanceService {
 			dailyAttendanceForm
 					.setTrainingStartTime(attendanceManagementDto.getTrainingStartTime());
 			dailyAttendanceForm.setTrainingEndTime(attendanceManagementDto.getTrainingEndTime());
+			// 出勤時間を「時」「分」に分割
+			String startTime = attendanceManagementDto.getTrainingStartTime();
+
+			if (startTime != null && !startTime.isEmpty()) {
+				int startHour = Integer.parseInt(startTime.substring(0, 2));
+				int startMinute = Integer.parseInt(startTime.substring(3, 5));
+
+				dailyAttendanceForm.setTrainingStartTimeHour(startHour);
+				dailyAttendanceForm.setTrainingStartTimeMinute(startMinute);
+			}
+
+			// 退勤時間を「時」「分」に分割
+			String endTime = attendanceManagementDto.getTrainingEndTime();
+
+			if (endTime != null && !endTime.isEmpty()) {
+				int endHour = Integer.parseInt(endTime.substring(0, 2));
+				int endMinute = Integer.parseInt(endTime.substring(3, 5));
+
+				dailyAttendanceForm.setTrainingEndTimeHour(endHour);
+				dailyAttendanceForm.setTrainingEndTimeMinute(endMinute);
+			}
+
 			if (attendanceManagementDto.getBlankTime() != null) {
 				dailyAttendanceForm.setBlankTime(attendanceManagementDto.getBlankTime());
 				dailyAttendanceForm.setBlankTimeValue(String.valueOf(
@@ -336,11 +379,12 @@ public class StudentAttendanceService {
 	}
 
 	/**
-	 * Ⅱ．現在より過去に未入力が無いかチェック
-	 * 
-	 * @param lmsUserId ログイン情報DTO．LMSユーザID
-	 * @return 未入力あり(true) / 未入力なし(false)
-	 */
+	  * 勤怠を押下
+	  * @author 任弘哲  – Task.25
+	  * @param 無し
+	  * @return 未入力あり(true) / 未入力なし(false)
+	  */
+
 	public boolean notEnterCheck() throws ParseException {
 		// SimpleDateFormatクラスでフォーマットパターンを設定する
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
@@ -348,17 +392,51 @@ public class StudentAttendanceService {
 		// 現在日付を取得
 		Date nowDate = new Date();
 		String formattedDate = sdf.format(nowDate);
+		Date today = sdf.parse(formattedDate);
 
 		// 過去日の未入力数をカウント
 		// パラメータ：LMSユーザID、削除フラグ、現在日付
 		int unenteredCount = tStudentAttendanceMapper.notEnterCount(
-				loginUserDto.getLmsUserId(), Constants.DB_FLG_FALSE, formattedDate);
+				loginUserDto.getLmsUserId(), Constants.DB_FLG_FALSE, today);
 
 		// 未入力日が0より大きい場合はtrue,そうでない場合はfalseを戻す。
 		if (unenteredCount > 0) {
 			return true;
 		}
 		return false;
+	}
+
+	/**
+	 * 入力された出退勤の時間をhh:mm形式に変換し、AttendanceFormにセットする
+	 * 
+	 * @param attendanceForm 勤怠編集フォーム
+	 */
+	public void formatConversion(AttendanceForm attendanceForm) {
+		// フォームまたはリストがnullの場合は処理を行わない
+		if (attendanceForm == null || attendanceForm.getAttendanceList() == null) {
+			return;
+		}
+
+		// DailyAttendanceFormのリストをループ処理
+		for (DailyAttendanceForm form : attendanceForm.getAttendanceList()) {
+			if (form == null) {
+				continue;
+			}
+
+			// 出勤の「時」「分」が共に入力されている場合
+			if (form.getTrainingStartTimeHour() != null && form.getTrainingStartTimeMinute() != null) {
+				String startTime = String.format("%02d:%02d", form.getTrainingStartTimeHour(),
+						form.getTrainingStartTimeMinute());
+				form.setTrainingStartTime(startTime);
+			}
+
+			// 退勤の「時」「分」が共に入力されている場合
+			if (form.getTrainingEndTimeHour() != null && form.getTrainingEndTimeMinute() != null) {
+				String endTime = String.format("%02d:%02d", form.getTrainingEndTimeHour(),
+						form.getTrainingEndTimeMinute());
+				form.setTrainingEndTime(endTime);
+			}
+		}
 	}
 
 }

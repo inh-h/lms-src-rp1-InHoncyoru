@@ -86,13 +86,14 @@
 		WHERE student_attendance_id = #{studentAttendanceId}
 	</update>
     
+    <!-- 任弘哲 - Task.25 -->
     <!-- 過去日の勤怠未入力件数を取得する -->
 	<select id="notEnterCount" resultType="int">
 		SELECT COUNT (*)
 		FROM t_student_attendance
 		WHERE lms_user_id = #{lmsUserId}
 			AND delete_flg = #{deleteFlg}
-			AND training_date &lt; #{nowDateString}::timestamp
+			AND training_date &lt; #{nowDate}::timestamp
 			AND (training_start_time IS NULL OR training_start_time = '')
 	</select>
 

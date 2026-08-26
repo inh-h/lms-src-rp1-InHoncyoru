@@ -48,7 +48,6 @@
 								<td class="w140">[[${dailyAttendanceForm.dispTrainingDate}]]</td>
 								<td class="w300">[[${dailyAttendanceForm.sectionName}]]</td>
 								<td class="w150">
-								    <!-- 強制的に横並びにして中央揃えにする囲み（div）を追加 -->
 								    <div style="display: inline-flex; align-items: center; justify-content: space-between; width: 100%;">
 								        <select
 								            th:name="|attendanceList[${stat.index}].trainingStartTimeHour|"
@@ -82,7 +81,6 @@
 								    </div>
 								</td>
 								<td class="w150">
-								    <!-- 強制的に横並びにして中央揃えにする囲み（div）を追加 -->
 								    <div style="display: inline-flex; align-items: center; justify-content: space-between; width: 100%;">
 								        <select
 								            th:name="|attendanceList[${stat.index}].trainingEndTimeHour|"

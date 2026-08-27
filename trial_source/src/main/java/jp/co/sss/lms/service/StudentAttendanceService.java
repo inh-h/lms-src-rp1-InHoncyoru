@@ -423,14 +423,14 @@ public class StudentAttendanceService {
 				continue;
 			}
 
-			// 出勤の「時」「分」が共に入力されている場合
+			// 出勤の時間と分どちらも選択している場合
 			if (form.getTrainingStartTimeHour() != null && form.getTrainingStartTimeMinute() != null) {
 				String startTime = String.format("%02d:%02d", form.getTrainingStartTimeHour(),
 						form.getTrainingStartTimeMinute());
 				form.setTrainingStartTime(startTime);
 			}
 
-			// 退勤の「時」「分」が共に入力されている場合
+			// 退勤の時間と分どちらも選択している場合
 			if (form.getTrainingEndTimeHour() != null && form.getTrainingEndTimeMinute() != null) {
 				String endTime = String.format("%02d:%02d", form.getTrainingEndTimeHour(),
 						form.getTrainingEndTimeMinute());
@@ -438,5 +438,4 @@ public class StudentAttendanceService {
 			}
 		}
 	}
-
 }

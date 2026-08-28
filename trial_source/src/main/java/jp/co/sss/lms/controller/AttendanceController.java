@@ -130,15 +130,25 @@ public class AttendanceController {
 	/**
 	 * 勤怠情報直接変更画面 『更新』ボタン押下
 	 * 
+	 * @author 任弘哲  – Task.26,27
 	 * @param attendanceForm
 	 * @param model
 	 * @param result
-	 * @return 勤怠管理画面
+	 * @return 勤怠情報直接変更画面
 	 * @throws ParseException
 	 */
 	@RequestMapping(path = "/update", params = "complete", method = RequestMethod.POST)
 	public String complete(AttendanceForm attendanceForm, Model model, BindingResult result)
 			throws ParseException {
+		//入力チェック
+		studentAttendanceService.updateInputCheck(attendanceForm, result);
+
+		// エラーが存在する場合、勤怠情報直接変更画面（update.html）へ戻す
+		if (result.hasErrors()) {
+			model.addAttribute("attendanceForm", attendanceForm);
+			return "attendance/update";
+		}
+
 		// 画面から入力された時・分を「hh:mm」形式に変換してセットする
 		studentAttendanceService.formatConversion(attendanceForm);
 

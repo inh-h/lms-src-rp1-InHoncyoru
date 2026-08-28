@@ -8,7 +8,7 @@ import lombok.Data;
 /**
  * 勤怠フォーム
  * 
- * @author 東京ITスクール
+ * @author 任弘哲
  */
 @Data
 public class AttendanceForm {

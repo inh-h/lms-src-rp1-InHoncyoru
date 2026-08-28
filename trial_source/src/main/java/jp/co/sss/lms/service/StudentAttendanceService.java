@@ -10,6 +10,7 @@ import java.util.List;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.BindingResult;
 
 import jp.co.sss.lms.dto.AttendanceManagementDto;
 import jp.co.sss.lms.dto.LoginUserDto;
@@ -407,10 +408,11 @@ public class StudentAttendanceService {
 	}
 
 	/**
-	 * 入力された出退勤の時間をhh:mm形式に変換し、AttendanceFormにセットする
-	 * 
-	 * @param attendanceForm 勤怠編集フォーム
-	 */
+	  * 勤怠情報直接変更
+	  * @author 任弘哲  – Task.26
+	  * @param AttendanceForm attendanceForm
+	  * @return 無し
+	  */
 	public void formatConversion(AttendanceForm attendanceForm) {
 		// フォームまたはリストがnullの場合は処理を行わない
 		if (attendanceForm == null || attendanceForm.getAttendanceList() == null) {
@@ -438,4 +440,132 @@ public class StudentAttendanceService {
 			}
 		}
 	}
+
+	/**
+	  * 勤怠情報直接変更入力チェック
+	  * @author 任弘哲  – Task.27
+	  * @param AttendanceForm attendanceForm
+	  * @return result エラー結果格納用のBindingResult
+	  */
+	public void updateInputCheck(AttendanceForm attendanceForm, BindingResult result) {
+		// エラーの場合、勤怠情報直接変更画面に遷移
+		if (result.hasErrors() || attendanceForm == null || attendanceForm.getAttendanceList() == null) {
+			//エラーメッセージが設定されていた場合
+			attendanceForm.setBlankTimes(attendanceUtil.setBlankTime());
+			java.util.LinkedHashMap<Integer, String> hours = new java.util.LinkedHashMap<>();
+			hours.put(null, "");
+			for (int i = 0; i < 24; i++) {
+				hours.put(i, String.format("%02d", i));
+			}
+			attendanceForm.setHours(hours);
+			java.util.LinkedHashMap<Integer, String> minutes = new java.util.LinkedHashMap<>();
+			minutes.put(null, "");
+			for (int i = 0; i < 60; i++) {
+				minutes.put(i, String.format("%02d", i));
+			}
+			attendanceForm.setMinutes(minutes);
+			return;
+		}
+
+		boolean hasValidationError = false;
+
+		//入力パラメータ．勤怠リスト[n]の件数分、下記チェックを行う
+		for (int n = 0; n < attendanceForm.getAttendanceList().size(); n++) {
+			jp.co.sss.lms.form.DailyAttendanceForm dailyForm = attendanceForm.getAttendanceList().get(n);
+			String prefix = "attendanceList[" + n + "].";
+
+			//備考の文字数 ＞ 100 の場合（プロパティ名: note）
+			if (dailyForm.getNote() != null && dailyForm.getNote().length() > 100) {
+				result.addError(
+						new org.springframework.validation.FieldError("attendanceForm", prefix + "note", null, false,
+								new String[] { "maxlength" }, new Object[] { "備考", "100" }, "備考は100文字以内で入力してください。"));
+				hasValidationError = true;
+			}
+
+			//出退勤の入力状態判定（Integer型のため null チェック）
+			boolean startH = dailyForm.getTrainingStartTimeHour() != null;
+			boolean startM = dailyForm.getTrainingStartTimeMinute() != null;
+			boolean endH = dailyForm.getTrainingEndTimeHour() != null;
+			boolean endM = dailyForm.getTrainingEndTimeMinute() != null;
+
+			//出勤時間(時)、出勤時間(分)の一方が入力有り ＆ もう一方が入力なしの場合
+			if ((startH && !startM) || (!startH && startM)) {
+				result.addError(new org.springframework.validation.FieldError("attendanceForm",
+						prefix + "trainingStartTimeHour", null, false,
+						new String[] { "input.invalid" }, new Object[] { "出勤時間" }, "出勤時間の入力が不完全です。"));
+				hasValidationError = true;
+			}
+
+			//退勤時間(時)、退勤時間(分)の一方が入力有り ＆ もう一方が入力なしの場合
+			if ((endH && !endM) || (!endH && endM)) {
+				result.addError(new org.springframework.validation.FieldError("attendanceForm",
+						prefix + "trainingEndTimeHour", null, false,
+						new String[] { "input.invalid" }, new Object[] { "退勤時間" }, "退勤時間の入力が不完全です。"));
+				hasValidationError = true;
+			}
+
+			//出勤時間に入力なし ＆ 退勤時間に入力あり の場合
+			boolean hasStart = startH && startM;
+			boolean hasEnd = endH && endM;
+			if (!hasStart && hasEnd) {
+				result.addError(new org.springframework.validation.FieldError("attendanceForm",
+						prefix + "trainingStartTimeHour", null, false,
+						new String[] { "attendance.punchInEmpty" }, new Object[] { "なし" }, "出勤時間が入力されていません。"));
+				hasValidationError = true;
+			}
+
+			//この行のチェックで既にエラーがある場合は、以降の時刻比較（e, f）をスキップ
+			if (result.hasFieldErrors(prefix + "*")) {
+				continue;
+			}
+
+			//時刻データが出退勤ともに揃っている場合のみ比較を行う
+			if (hasStart && hasEnd) {
+				java.time.LocalTime startTime = java.time.LocalTime.of(dailyForm.getTrainingStartTimeHour(),
+						dailyForm.getTrainingStartTimeMinute());
+				java.time.LocalTime endTime = java.time.LocalTime.of(dailyForm.getTrainingEndTimeHour(),
+						dailyForm.getTrainingEndTimeMinute());
+
+				//出勤時間 ＞ 退勤時間 の場合
+				if (startTime.isAfter(endTime)) {
+					result.addError(new org.springframework.validation.FieldError("attendanceForm",
+							prefix + "trainingStartTimeHour", null, false,
+							new String[] { "attendance.trainingTimeRange" }, new Object[] { n }, "出勤時刻が退勤時刻を超えています。"));
+					hasValidationError = true;
+					continue;
+				}
+
+				//中抜け時間が勤務時間を超える場合（blankTime[分単位のInteger] が存在する場合）
+				if (dailyForm.getBlankTime() != null) {
+					long dutyMinutes = java.time.temporal.ChronoUnit.MINUTES.between(startTime, endTime);
+
+					if (dailyForm.getBlankTime() > dutyMinutes) {
+						result.addError(new org.springframework.validation.FieldError("attendanceForm",
+								prefix + "blankTime", null, false,
+								new String[] { "attendance.blankTimeError" }, new Object[] { "なし" },
+								"中抜け時間が勤務時間を超えています。"));
+						hasValidationError = true;
+					}
+				}
+			}
+		}
+
+		// エラーメッセージが設定されていた場合、プルダウン選択肢（マスタ）を再設定
+		if (hasValidationError || result.hasErrors()) {
+			attendanceForm.setBlankTimes(attendanceUtil.setBlankTime());
+			java.util.LinkedHashMap<Integer, String> hours = new java.util.LinkedHashMap<>();
+			hours.put(null, "");
+			for (int i = 0; i < 24; i++) {
+				hours.put(i, String.format("%02d", i));
+			}
+			attendanceForm.setHours(hours);
+			java.util.LinkedHashMap<Integer, String> minutes = new java.util.LinkedHashMap<>();
+			minutes.put(null, "");
+			for (int i = 0; i < 60; i++) {
+				minutes.put(i, String.format("%02d", i));
+			}
+			attendanceForm.setMinutes(minutes);
+		}
+	}
+
 }
